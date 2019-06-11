@@ -1,6 +1,7 @@
 import plotly.plotly as py
 import plotly.graph_objs as go
-
+from IPython.display import IFrame
+from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 # Create random data with numpy
 import numpy as np
 
@@ -51,12 +52,12 @@ CHL_2000+CHL_2000*0.01
 
 
 #Search which countries have an equal GDP, independent of the year
-CHL=GDP_DF_ValueOnly[(GDP_DF_ValueOnly > float(CHL_2000-(CHL_2000*0.05))) & (GDP_DF_ValueOnly < float(CHL_2000+CHL_2000*0.05))]
+CHL=GDP_DF_ValueOnly[(GDP_DF_ValueOnly > float(CHL_2000-(CHL_2000*0.005))) & (GDP_DF_ValueOnly < float(CHL_2000+CHL_2000*0.005))]
 
 #List of Years
 Years=[col for col in GDP_DF_ValueOnly.columns]
 
-#Iterate through years and idexes
+#Iterate through years and indexes
 RowPartial={}
 YearOfValue={}
 for years in Years:
@@ -70,32 +71,25 @@ for years in Years:
         pass
     pass
 pass
+len(RowPartial)
+#Grafico de barras
+PlotList=[]
+for i in range(len(RowPartial)):
+    PlotList.append(go.Bar(text=str(YearOfValue[list(RowPartial)[i]]),
+                   x=np.array(GDP_DF.iloc[RowPartial[list(RowPartial)[i]],]["Country Name"]),
+                   y=np.array(GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[i]],][YearOfValue[list(RowPartial)[i]]])))
+pass
 
+#Scatter plot
+PlotList=[]
+for i in range(len(RowPartial)):
+    PlotList.append(go.Scatter(x=np.array(YearOfValue[list(RowPartial)[i]]),
+                   y=np.array(GDP_DF.iloc[RowPartial[list(RowPartial)[i]],]["Country Name"]),
+                   text=np.array(GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[i]],][YearOfValue[list(RowPartial)[i]]])))
+pass
 
+py.iplot(PlotList, filename='GDP_Plot', sharing="public", fileopt="overwrite") 
 
-
-RowPartial
-RowPartial[list(RowPartial)[0]]
-YearOfValue[list(RowPartial)[0]]
-
-Parent=go.Bar(x=np.array(str(YearOfValue[list(RowPartial)[0]])), y=np.array(GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[0]],][YearOfValue[list(RowPartial)[0]]]))
-Comp=go.Bar(x=np.array(str(YearOfValue[list(RowPartial)[1]])), y=np.array(GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[1]],][YearOfValue[list(RowPartial)[1]]]))
-py.iplot([Parent, Comp], filename='base-bar')
-#
-
-#
-
-
-GDP_DF.iloc[28,]["Country Name"]
-GDP_DF[GDP_DF["Country Name"].isin([RowPartial[list(RowPartial)[0]]])]
-GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[0]],].values
-
-#
-P1=go.Scatter(x=Years, 
-              y=GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[0]],].values, 
-              mode="lines", 
-              text=GDP_DF.iloc[RowPartial[list(RowPartial)[0]],]["Country Name"])
-py.iplot([P1], filename='news-source')
 #################################################
 #################################################
 #################################################
