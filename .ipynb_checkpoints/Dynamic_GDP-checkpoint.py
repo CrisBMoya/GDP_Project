@@ -1,20 +1,19 @@
-#Import Bokeh
-from bokeh.io import output_notebook, show
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.plotting import figure
-from bokeh.sampledata.autompg import autompg_clean as df
-from bokeh.transform import factor_cmap
+import plotly.plotly as py
+import plotly.graph_objs as go
+
+# Create random data with numpy
+import numpy as np
 
 #Import pandas
 import pandas as pd
 
 #Read DF
-GDP_DF=pd.read_excel("/home/tobal/GithubProjects/Dynamic_GDP/GDP_1960_2017/GDP_From_1960_2017.xlsx")
+GDP_DF=pd.read_excel("/home/tobal/GithubProjects/Dynamic_GDP/GDP_1960_2017/API_NY.GDP.PCAP.CD_DS2_en_excel_v2_10576730.xlsx")
 GDP_DF.head()
 
 #Fill NA
 GDP_DF=GDP_DF.fillna(0)
-
+ 
 #See shape
 GDP_DF.shape
 
@@ -45,27 +44,75 @@ GDP_DF.iloc[F1.index,]["Country Name"]
 #Choose one country and find which values among all the other are the same, regardless of year
 GDP_DF[GDP_DF["Country Name"].isin(["Chile"])]
 
-#Choose USA in 2010
-CHL_2000=GDP_DF[GDP_DF["Country Name"].isin(["Chile"])]["2000"]
-CHL_2000-CHL_2000*0.1
-CHL_2000+CHL_2000*0.1
+#Choose CHL in 2000
+CHL_2000=GDP_DF[GDP_DF["Country Name"].isin(["Chile"])]["2017"]
+CHL_2000-CHL_2000*0.01
+CHL_2000+CHL_2000*0.01
+
 
 #Search which countries have an equal GDP, independent of the year
-CHL=GDP_DF_ValueOnly[(GDP_DF_ValueOnly > 277000000000) & (GDP_DF_ValueOnly < 287000000000)]
+CHL=GDP_DF_ValueOnly[(GDP_DF_ValueOnly > float(CHL_2000-(CHL_2000*0.05))) & (GDP_DF_ValueOnly < float(CHL_2000+CHL_2000*0.05))]
 
-CHL.shape[1]
-CHL.iloc[:,0]
+#List of Years
+Years=[col for col in GDP_DF_ValueOnly.columns]
 
-
-RowNumbers=list()
-#Usar condicional
-CHL.iloc[:,1][~CHL.iloc[:,1].isnull()].shape[0] #permite evaluar largo del resultado, si es 0 no se usa
-
-#Corregir con condicional de arriba
-for i in range(0, CHL.shape[1]):
-    RowNumbers.append(CHL.iloc[:,i][~CHL.iloc[:,i].isnull()].index)
+#Iterate through years and idexes
+RowPartial={}
+YearOfValue={}
+for years in Years:
+    PartialResCHL=CHL[years][~CHL[years].isnull()].index.values.astype(int)
+    
+    if(PartialResCHL.shape[0]!=0):
+        for i in range(PartialResCHL.shape[0]):
+            #RowPartial[(str(years) + "_" + str(PartialResCHL[i]))]=GDP_DF.iloc[PartialResCHL[i],]["Country Name"]
+            RowPartial[(str(years) + "_" + str(PartialResCHL[i]))]=PartialResCHL[i]
+            YearOfValue[(str(years) + "_" + str(PartialResCHL[i]))]=years
+        pass
+    pass
 pass
-RowNumbers
 
 
-GDP_DF.iloc[RowNumbers,]["Country Name"]
+
+
+RowPartial
+RowPartial[list(RowPartial)[0]]
+YearOfValue[list(RowPartial)[0]]
+
+Parent=go.Bar(x=np.array(str(YearOfValue[list(RowPartial)[0]])), y=np.array(GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[0]],][YearOfValue[list(RowPartial)[0]]]))
+Comp=go.Bar(x=np.array(str(YearOfValue[list(RowPartial)[1]])), y=np.array(GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[1]],][YearOfValue[list(RowPartial)[1]]]))
+py.iplot([Parent, Comp], filename='base-bar')
+#
+
+#
+
+
+GDP_DF.iloc[28,]["Country Name"]
+GDP_DF[GDP_DF["Country Name"].isin([RowPartial[list(RowPartial)[0]]])]
+GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[0]],].values
+
+#
+P1=go.Scatter(x=Years, 
+              y=GDP_DF_ValueOnly.iloc[RowPartial[list(RowPartial)[0]],].values, 
+              mode="lines", 
+              text=GDP_DF.iloc[RowPartial[list(RowPartial)[0]],]["Country Name"])
+py.iplot([P1], filename='news-source')
+#################################################
+#################################################
+#################################################
+#################################################
+DataPlot=go.Scatter(x=Years, y=GDP_DF_ValueOnly.iloc[168,].values)
+py.iplot([DataPlot], filename='basic-line')
+
+py.iplot([go.Scatter(x=Years, y=GDP_DF_ValueOnly)], filename="basic-line")
+GDP_DF_ValueOnly.shape[1]
+
+traces = []
+for i in range(0, GDP_DF_ValueOnly.shape[1]):
+    traces.append(go.Scatter(
+    x=Years,
+    y=GDP_DF_ValueOnly[Years[i]],
+    mode="lines"
+    ))
+pass
+fig = go.Figure(data=traces)
+py.iplot(fig, filename='news-source')
